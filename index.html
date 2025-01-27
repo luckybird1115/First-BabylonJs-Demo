@@ -109,29 +109,30 @@
                 varying vec2 vUV;
                 uniform sampler2D textureSampler; // Base texture
                 uniform sampler2D patternTexture; // Pattern texture
+                uniform sampler2D lightmapTexture; // Lightmap texture
                 
                 void main() {
-                    vec4 baseColor = texture2D(textureSampler, vUV); // Sample base texture
-                    vec4 patternColor = texture2D(patternTexture, vUV); // Sample pattern texture
+                    // Sample the base texture and apply blue color
+                    vec4 baseColor = texture2D(textureSampler, vUV) * vec4(0.0, 0.0, 1.0, 1.0); // Blue color
                     
-                    // Apply blue color to the base texture
-                    vec4 blueBaseColor = baseColor * vec4(0.0, 0.0, 1.0, 1.0); // Blue color (RGB: 0, 0, 1)
+                    // Sample the pattern texture and apply red color
+                    vec4 patternColor = texture2D(patternTexture, vUV) * vec4(1.0, 0.0, 0.0, 1.0); // Red color
                     
-                    // Apply red color to the pattern texture
-                    vec4 redPatternColor = patternColor * vec4(1.0, 0.0, 0.0, 1.0); // Red color (RGB: 1, 0, 0)
+                    // Blend the base and pattern textures (e.g., add them)
+                    vec4 blendedColor = baseColor + patternColor;
                     
-                    // Blend the textures (e.g., add them)
-                    vec4 blendedColor = blueBaseColor + redPatternColor;
+                    // Sample the lightmap texture
+                    vec4 lightmapColor = texture2D(lightmapTexture, vUV);
                     
-                    // Output the final color
-                    gl_FragColor = blendedColor;
+                    // Modulate the final color with the lightmap texture
+                    gl_FragColor = mix(blendedColor, lightmapColor, lightmapColor.a); // Use lightmap alpha as a mask
                 }
             `;
 
             // Create the shader material
             var shaderMaterial = new BABYLON.ShaderMaterial('custom', scene, 'custom', {
                 attributes: ["position", "uv"],
-                uniforms: ["worldViewProjection", "textureSampler", "patternTexture"]
+                uniforms: ["worldViewProjection", "textureSampler", "patternTexture", "lightmapTexture"]
             });
 
             // Load the base texture
@@ -140,9 +141,13 @@
             // Load the pattern texture
             var patternTexture = new BABYLON.Texture("textures/10 Zebrawood 4000x4000.png", scene);
 
+            // Load the lightmap texture
+            var lightmapTexture = new BABYLON.Texture("textures/11 Modern Oak 4000x4000.png", scene);
+
             // Set the textures in the shader material
             shaderMaterial.setTexture("textureSampler", baseTexture); // Base texture
             shaderMaterial.setTexture("patternTexture", patternTexture); // Pattern texture
+            shaderMaterial.setTexture("lightmapTexture", lightmapTexture); // Lightmap texture
 
             // Assign the material to the box
             box.material = shaderMaterial;
