@@ -81,88 +81,56 @@
 // Create a box mesh
     var box = BABYLON.MeshBuilder.CreateBox("box", { size: 2 }, scene);
 
-    
-        
-    // Create a ShaderMaterial
-    var customShaderMaterial = new BABYLON.ShaderMaterial("customShader", scene, {
-        vertex: "custom",
-        fragment: "custom",
-    }, {
-        attributes: ["position", "normal", "uv"],
-        uniforms: ["worldViewProjection", "baseTexture", "baseColor", "patternTexture", "patternColor", "lightmapTexture"]
-    });
-
     // Load textures
     var baseTexture = new BABYLON.Texture("textures/3 Carbon Fiber 4000x4000.png", scene);
     var patternTexture = new BABYLON.Texture("textures/10 Zebrawood 4000x4000.png", scene);
     var lightmapTexture = new BABYLON.Texture("textures/11 Modern Oak 4000x4000.png", scene);
 
-    // Set uniforms
-    customShaderMaterial.setTexture("baseTexture", baseTexture);
-    customShaderMaterial.setColor3("baseColor", new BABYLON.Color3(0, 0, 1)); // Example color
-    customShaderMaterial.setTexture("patternTexture", patternTexture);
-    customShaderMaterial.setColor3("patternColor", new BABYLON.Color3(1, 0, 0)); // Example color
-    customShaderMaterial.setTexture("lightmapTexture", lightmapTexture);
-
-    // Shader code
-    var vertexShader = `
+    // Define the custom vertex shader
+    BABYLON.Effect.ShadersStore['customVertexShader'] = `
         precision highp float;
-
-        // Attributes
         attribute vec3 position;
-        attribute vec3 normal;
         attribute vec2 uv;
-
-        // Uniforms
         uniform mat4 worldViewProjection;
-
-        // Varying
         varying vec2 vUV;
-
-        void main(void) {
+        
+        void main() {
+            vec4 p = vec4(position, 1.);
+            gl_Position = worldViewProjection * p;
             vUV = uv;
-            gl_Position = worldViewProjection * vec4(position, 1.0);
         }
     `;
 
-    var fragmentShader = `
+    // Define the custom fragment shader
+    BABYLON.Effect.ShadersStore['customFragmentShader'] = `
         precision highp float;
-
-        // Uniforms
-        uniform sampler2D baseTexture;
-        uniform vec3 baseColor;
-        uniform sampler2D patternTexture;
-        uniform vec3 patternColor;
-        uniform sampler2D lightmapTexture;
-
-        // Varying
         varying vec2 vUV;
-
-        void main(void) {
-            vec4 base = texture2D(baseTexture, vUV);
-            vec4 pattern = texture2D(patternTexture, vUV);
-            vec4 lightmap = texture2D(lightmapTexture, vUV);
-
-            vec3 finalColor = base.rgb * baseColor + pattern.rgb * patternColor;
-            finalColor *= lightmap.rgb;
-
-            gl_FragColor = vec4(finalColor, 1.0);
+        uniform sampler2D textureSampler;
+        uniform vec4 color;
+        
+        void main() {
+            vec4 textureColor = texture2D(textureSampler, vUV);
+            gl_FragColor = textureColor * color;
         }
     `;
 
-    // Assign shader code using onCompiled
-    customShaderMaterial.onCompiled = function(shader) {
-        shader.setVertexShaderSource(vertexShader);
-        shader.setFragmentShaderSource(fragmentShader);
-    };
+    // Create the shader material
+    var shaderMaterial = new BABYLON.ShaderMaterial('custom', scene, 'custom', {
+        attributes: ["position", "uv"],
+        uniforms: ["worldViewProjection", "textureSampler", "color"]
+    });
 
-        // Apply the material to the box mesh
-    box.material = customShaderMaterial;
+    // Set the texture and color in the shader material
+    shaderMaterial.setTexture("textureSampler", baseTexture);
+    shaderMaterial.setColor4("color", new BABYLON.Color4(0, 0, 1, 1)); // White color with full opacity
+
+    // Assign the material to the box
+    box.material = shaderMaterial;
 
     // Our built-in 'ground' shape.
-    var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
-    let groundMaterial = new BABYLON.StandardMaterial("Ground Material", scene);
-    ground.material = groundMaterial;
+    // var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
+    // let groundMaterial = new BABYLON.StandardMaterial("Ground Material", scene);
+    // ground.material = groundMaterial;
 
     return scene;
 };
