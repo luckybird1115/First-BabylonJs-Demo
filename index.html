@@ -248,6 +248,97 @@
             // let groundMaterial = new BABYLON.StandardMaterial("Ground Material", scene);
             // ground.material = groundMaterial;
 
+            // Create GUI controls
+            var gui = new dat.GUI();
+            
+            // Create color objects for GUI
+            var colors = {
+                baseColor: [0, 0, 1], // Initial blue color (RGB)
+                patternColor: [1, 0, 0] // Initial red color (RGB)
+            };
+
+            // Function to update materials with new colors
+            var updateColors = function() {
+                // Update box1 shader (base texture only)
+                BABYLON.Effect.ShadersStore['box1FragmentShader'] = `
+                    precision highp float;
+                    varying vec2 vUV;
+                    uniform sampler2D textureSampler;
+                    uniform vec3 baseColor;
+                    
+                    void main() {
+                        vec4 baseTexture = texture2D(textureSampler, vUV);
+                        gl_FragColor = baseTexture * vec4(baseColor, 1.0);
+                    }
+                `;
+
+                // Update box2 shader (base + pattern)
+                BABYLON.Effect.ShadersStore['box2FragmentShader'] = `
+                    precision highp float;
+                    varying vec2 vUV;
+                    uniform sampler2D textureSampler;
+                    uniform sampler2D patternTexture;
+                    uniform vec3 baseColor;
+                    uniform vec3 patternColor;
+                    
+                    void main() {
+                        vec4 baseTexture = texture2D(textureSampler, vUV);
+                        vec4 patternTexture = texture2D(patternTexture, vUV);
+                        
+                        vec4 baseColor = baseTexture * vec4(baseColor, 1.0);
+                        vec4 patternColor = patternTexture * vec4(patternColor, 1.0);
+                        
+                        gl_FragColor = baseColor + patternColor;
+                    }
+                `;
+
+                // Update materials with new uniforms
+                box1Material = new BABYLON.ShaderMaterial('box1Material', scene, {
+                    vertex: 'custom',
+                    fragment: 'box1'
+                }, {
+                    attributes: ["position", "uv"],
+                    uniforms: ["worldViewProjection", "textureSampler", "baseColor"]
+                });
+                box1Material.setTexture("textureSampler", baseTexture);
+                box1Material.setVector3("baseColor", new BABYLON.Vector3(colors.baseColor[0], colors.baseColor[1], colors.baseColor[2]));
+                
+                box2Material = new BABYLON.ShaderMaterial('box2Material', scene, {
+                    vertex: 'custom',
+                    fragment: 'box2'
+                }, {
+                    attributes: ["position", "uv"],
+                    uniforms: ["worldViewProjection", "textureSampler", "patternTexture", "baseColor", "patternColor"]
+                });
+                box2Material.setTexture("textureSampler", baseTexture);
+                box2Material.setTexture("patternTexture", patternTexture);
+                box2Material.setVector3("baseColor", new BABYLON.Vector3(colors.baseColor[0], colors.baseColor[1], colors.baseColor[2]));
+                box2Material.setVector3("patternColor", new BABYLON.Vector3(colors.patternColor[0], colors.patternColor[1], colors.patternColor[2]));
+
+                // Update mesh materials
+                box1.material = box1Material;
+                box2.material = box2Material;
+                plane1.material = box1Material;
+                plane2.material = box2Material;
+            };
+
+            // Add GUI controls for base color
+            var baseFolder = gui.addFolder('Base Texture Color');
+            baseFolder.add(colors.baseColor, '0', 0, 1).name('R').onChange(updateColors);
+            baseFolder.add(colors.baseColor, '1', 0, 1).name('G').onChange(updateColors);
+            baseFolder.add(colors.baseColor, '2', 0, 1).name('B').onChange(updateColors);
+            baseFolder.open();
+
+            // Add GUI controls for pattern color
+            var patternFolder = gui.addFolder('Pattern Texture Color');
+            patternFolder.add(colors.patternColor, '0', 0, 1).name('R').onChange(updateColors);
+            patternFolder.add(colors.patternColor, '1', 0, 1).name('G').onChange(updateColors);
+            patternFolder.add(colors.patternColor, '2', 0, 1).name('B').onChange(updateColors);
+            patternFolder.open();
+
+            // Initial update
+            updateColors();
+
             return scene;
         };
         window.initFunction = async function () {
