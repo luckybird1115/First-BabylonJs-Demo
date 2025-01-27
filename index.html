@@ -94,8 +94,8 @@
 
     // Load textures
     var baseTexture = new BABYLON.Texture("textures/3 Carbon Fiber 4000x4000.png", scene);
-    var patternTexture = new BABYLON.Texture("textures/10 Zebrawood 4000x4000", scene);
-    var lightmapTexture = new BABYLON.Texture("textures/11 Modern Oak 4000x4000", scene);
+    var patternTexture = new BABYLON.Texture("textures/10 Zebrawood 4000x4000.png", scene);
+    var lightmapTexture = new BABYLON.Texture("textures/11 Modern Oak 4000x4000.png", scene);
 
     // Set uniforms
     customShaderMaterial.setTexture("baseTexture", baseTexture);
@@ -156,7 +156,8 @@
         shader.setFragmentShaderSource(fragmentShader);
     };
 
-
+        // Apply the material to the box mesh
+    box.material = customShaderMaterial;
 
     // Our built-in 'ground' shape.
     var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
