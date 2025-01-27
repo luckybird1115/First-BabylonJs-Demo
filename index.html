@@ -80,8 +80,73 @@
             // Default intensity is 1. Let's dim the light a small amount
             light.intensity = 0.7;
 
-            // Create a box mesh
+            // Load textures
+            var baseTexture = new BABYLON.Texture("textures/3 Carbon Fiber 4000x4000.png", scene);
+            var patternTexture = new BABYLON.Texture("textures/10 Zebrawood 4000x4000.png", scene);
+            var lightmapTexture = new BABYLON.Texture("textures/11 Modern Oak 4000x4000.png", scene);
+
+            // Original box (with all textures) remains at center
             var box = BABYLON.MeshBuilder.CreateBox("box", { size: 2 }, scene);
+            box.position.x = -3; // Position it to the left
+            // Create the first box (only blue base texture)
+            var box1 = BABYLON.MeshBuilder.CreateBox("box1", { size: 2 }, scene);
+            box1.position.x = 3; // Position it to the left
+            
+            // Custom shader for box1 (blue base texture only)
+            BABYLON.Effect.ShadersStore['box1FragmentShader'] = `
+                precision highp float;
+                varying vec2 vUV;
+                uniform sampler2D textureSampler; // Base texture
+                
+                void main() {
+                    // Sample the base texture and apply blue color only
+                    vec4 baseColor = texture2D(textureSampler, vUV) * vec4(0.0, 0.0, 1.0, 1.0);
+                    gl_FragColor = baseColor;
+                }
+            `;
+
+            var box1Material = new BABYLON.ShaderMaterial('box1Material', scene, {
+                vertex: 'custom', // Reuse the original vertex shader
+                fragment: 'box1'
+            }, {
+                attributes: ["position", "uv"],
+                uniforms: ["worldViewProjection", "textureSampler"]
+            });
+            box1Material.setTexture("textureSampler", baseTexture);
+            box1.material = box1Material;
+
+            // Create the second box (blue base + red pattern)
+            var box2 = BABYLON.MeshBuilder.CreateBox("box2", { size: 2 }, scene);
+
+            // Custom shader for box2 (blue base + red pattern)
+            BABYLON.Effect.ShadersStore['box2FragmentShader'] = `
+                precision highp float;
+                varying vec2 vUV;
+                uniform sampler2D textureSampler; // Base texture
+                uniform sampler2D patternTexture; // Pattern texture
+                
+                void main() {
+                    // Sample the base texture and apply blue color
+                    vec4 baseColor = texture2D(textureSampler, vUV) * vec4(0.0, 0.0, 1.0, 1.0);
+                    
+                    // Sample the pattern texture and apply red color
+                    vec4 patternColor = texture2D(patternTexture, vUV) * vec4(1.0, 0.0, 0.0, 1.0);
+                    
+                    // Blend the base and pattern textures
+                    gl_FragColor = baseColor + patternColor;
+                }
+            `;
+
+            var box2Material = new BABYLON.ShaderMaterial('box2Material', scene, {
+                vertex: 'custom', // Reuse the original vertex shader
+                fragment: 'box2'
+            }, {
+                attributes: ["position", "uv"],
+                uniforms: ["worldViewProjection", "textureSampler", "patternTexture"]
+            });
+            box2Material.setTexture("textureSampler", baseTexture);
+            box2Material.setTexture("patternTexture", patternTexture);
+            box2.material = box2Material;
 
             // Load textures
             var baseTexture = new BABYLON.Texture("textures/3 Carbon Fiber 4000x4000.png", scene);
@@ -152,6 +217,31 @@
             // Assign the material to the box
             box.material = shaderMaterial;
 
+            // Create planes to match the boxes
+            // Plane 1 - matches box1 (blue base texture only)
+            var plane1 = BABYLON.MeshBuilder.CreatePlane("plane1", { 
+                size: 2,
+                sideOrientation: BABYLON.Mesh.DOUBLESIDE // Show texture on both sides
+            }, scene);
+            plane1.position = new BABYLON.Vector3(3, -3, 0);
+            plane1.material = box1Material;
+
+            // Plane 2 - matches box2 (blue base + red pattern)
+            var plane2 = BABYLON.MeshBuilder.CreatePlane("plane2", { 
+                size: 2,
+                sideOrientation: BABYLON.Mesh.DOUBLESIDE // Show texture on both sides
+            }, scene);
+            plane2.position = new BABYLON.Vector3(0, -3, 0);
+            plane2.material = box2Material;
+
+            // Plane 3 - matches original box (all textures)
+            var plane3 = BABYLON.MeshBuilder.CreatePlane("plane3", { 
+                size: 2,
+                sideOrientation: BABYLON.Mesh.DOUBLESIDE // Show texture on both sides
+            }, scene);
+            plane3.position = new BABYLON.Vector3(-3, -3, 0);
+            // plane3.rotation.x = Math.PI / 2;
+            plane3.material = shaderMaterial;
 
             // Our built-in 'ground' shape.
             // var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
