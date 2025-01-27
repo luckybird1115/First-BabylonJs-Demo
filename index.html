@@ -156,6 +156,9 @@
         shader.setFragmentShaderSource(fragmentShader);
     };
 
+        // Apply the material to the box mesh
+    box.material = customShaderMaterial;
+
     // Our built-in 'ground' shape.
     var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
     let groundMaterial = new BABYLON.StandardMaterial("Ground Material", scene);
