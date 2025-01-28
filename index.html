@@ -91,7 +91,7 @@
             // Create the first box (only blue base texture)
             var box1 = BABYLON.MeshBuilder.CreateBox("box1", { size: 2 }, scene);
             box1.position.x = 3; // Position it to the left
-            
+
             // Custom shader for box1 (blue base texture only)
             BABYLON.Effect.ShadersStore['box1FragmentShader'] = `
                 precision highp float;
@@ -219,7 +219,7 @@
 
             // Create planes to match the boxes
             // Plane 1 - matches box1 (blue base texture only)
-            var plane1 = BABYLON.MeshBuilder.CreatePlane("plane1", { 
+            var plane1 = BABYLON.MeshBuilder.CreatePlane("plane1", {
                 size: 2,
                 sideOrientation: BABYLON.Mesh.DOUBLESIDE // Show texture on both sides
             }, scene);
@@ -227,7 +227,7 @@
             plane1.material = box1Material;
 
             // Plane 2 - matches box2 (blue base + red pattern)
-            var plane2 = BABYLON.MeshBuilder.CreatePlane("plane2", { 
+            var plane2 = BABYLON.MeshBuilder.CreatePlane("plane2", {
                 size: 2,
                 sideOrientation: BABYLON.Mesh.DOUBLESIDE // Show texture on both sides
             }, scene);
@@ -235,7 +235,7 @@
             plane2.material = box2Material;
 
             // Plane 3 - matches original box (all textures)
-            var plane3 = BABYLON.MeshBuilder.CreatePlane("plane3", { 
+            var plane3 = BABYLON.MeshBuilder.CreatePlane("plane3", {
                 size: 2,
                 sideOrientation: BABYLON.Mesh.DOUBLESIDE // Show texture on both sides
             }, scene);
@@ -250,15 +250,15 @@
 
             // Create GUI controls
             var gui = new dat.GUI();
-            
+
             // Create color objects for GUI
-            var colors = {
-                baseColor: [0, 0, 1], // Initial blue color (RGB)
-                patternColor: [1, 0, 0] // Initial red color (RGB)
+            var RGBcolors = {
+                baseColor: "#8C9195",
+                patternColor: "#8C9195"
             };
 
             // Function to update materials with new colors
-            var updateColors = function() {
+            var updateColors = function () {
                 // Update box1 shader (base texture only)
                 BABYLON.Effect.ShadersStore['box1FragmentShader'] = `
                     precision highp float;
@@ -302,7 +302,7 @@
                 });
                 box1Material.setTexture("textureSampler", baseTexture);
                 box1Material.setVector3("baseColor", new BABYLON.Vector3(colors.baseColor[0], colors.baseColor[1], colors.baseColor[2]));
-                
+
                 box2Material = new BABYLON.ShaderMaterial('box2Material', scene, {
                     vertex: 'custom',
                     fragment: 'box2'
